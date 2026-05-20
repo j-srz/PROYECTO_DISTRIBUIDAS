@@ -15,15 +15,22 @@ export function simulateTuning({ currentLocation, activeNodes, selectedTables, s
   let fieldsToProcess = selectedFields;
   // Si no hay campos seleccionados explícitamente (SELECT *), procesamos todos los de las tablas
   if (fieldsToProcess.length === 0) {
-    fieldsToProcess = selectedTables.flatMap(t => TABLAS_LOGICAS[t].campos);
+    fieldsToProcess = selectedTables.flatMap(t => 
+      TABLAS_LOGICAS[t].campos.map(c => ({ tabla: t, campo: c }))
+    );
   }
 
-  for (const field of fieldsToProcess) {
-    const fragments = CAMPO_A_FRAGMENTOS[field];
-    if (fragments) {
-      for (const frag of fragments) {
-        requiredFragments.add(frag);
+  for (const { tabla, campo } of fieldsToProcess) {
+    if (tabla === 'Alumno') {
+      const fragments = CAMPO_A_FRAGMENTOS[campo];
+      if (fragments) {
+        for (const frag of fragments) {
+          requiredFragments.add(frag);
+        }
       }
+    } else {
+      // Para cualquier otra tabla, el fragmento ES la tabla misma
+      requiredFragments.add(tabla);
     }
   }
 

@@ -56,11 +56,7 @@ export const ESTADO_INICIAL = {
   consulta: {
     tablas: [],
     campos: [],
-    condicion: {
-      campo: "",
-      operador: "=",
-      valor: ""
-    }
+    condicion: { tabla: "", field: "", operator: "=", value: "" }
   }
 };
 
@@ -77,4 +73,24 @@ export const COLORES_TABLA = {
 export const getColorForTable = (nombre) => {
   const esFragmentoAlumno = Object.keys(FRAGMENTOS_ALUMNO).includes(nombre);
   return esFragmentoAlumno ? COLORES_TABLA["Alumno"] : COLORES_TABLA[nombre];
+};
+
+export const POSICIONES_INICIALES_ER = {
+  Alumno:   { x: 40,  y: 60  },
+  Carrera:  { x: 340, y: 60  },
+  Califica: { x: 190, y: 240 },
+  Materia:  { x: 40,  y: 420 },
+  Maestro:  { x: 340, y: 420 }
+};
+
+export const POSICION_DEFAULT_ER = { x: 20, y: 20 };
+
+export const FISICA_ER = {
+  FRICTION:     0.88,
+  RESTITUTION:  0.6,
+  THRESHOLD:    0.5
+};
+
+export const FEATURE_FLAGS = {
+  displayGraphicSelect: false
 };

@@ -4,7 +4,7 @@ import Constructor from './components/Constructor';
 import ResultadosPlan from './components/ResultadosPlan';
 import MinimapaGrafo from './components/MinimapaGrafo';
 import { simulateTuning } from './utils/tuningAlgorithm';
-import { ESTADO_INICIAL, TABLAS_LOGICAS, OPERADORES } from './data';
+import { ESTADO_INICIAL } from './data';
 
 function App() {
   const [selectedTables, setSelectedTables] = useState(ESTADO_INICIAL.consulta.tablas);
@@ -26,27 +26,31 @@ function App() {
       const newTables = selectedTables.filter(t => t !== table);
       setSelectedTables(newTables);
 
-      // Clean up fields and condition that are no longer available
-      const availableFieldsSet = new Set(
-        newTables.flatMap(t => TABLAS_LOGICAS[t].campos)
-      );
-
-      const newFields = selectedFields.filter(f => availableFieldsSet.has(f));
+      const newFields = selectedFields.filter(f => f.tabla !== table);
       setSelectedFields(newFields);
 
-      if (condition.field && !availableFieldsSet.has(condition.field)) {
-        setCondition({ field: '', operator: ESTADO_INICIAL.consulta.condicion.operador, value: '' });
+      if (condition.tabla === table) {
+        setCondition({ tabla: '', field: '', operator: ESTADO_INICIAL.consulta.condicion.operator, value: '' });
       }
     } else {
       setSelectedTables([...selectedTables, table]);
     }
   };
 
-  const toggleField = (field) => {
-    if (selectedFields.includes(field)) {
-      setSelectedFields(selectedFields.filter(f => f !== field));
+  const toggleField = (campo, tabla) => {
+    const yaSeleccionado = selectedFields.some(f => f.tabla === tabla && f.campo === campo);
+    
+    if (yaSeleccionado) {
+      const nuevos = selectedFields.filter(f => !(f.tabla === tabla && f.campo === campo));
+      setSelectedFields(nuevos);
+      if (!nuevos.some(f => f.tabla === tabla)) {
+        setSelectedTables(prev => prev.filter(t => t !== tabla));
+      }
     } else {
-      setSelectedFields([...selectedFields, field]);
+      setSelectedFields(prev => [...prev, { tabla, campo }]);
+      if (!selectedTables.includes(tabla)) {
+        setSelectedTables(prev => [...prev, tabla]);
+      }
     }
   };
 
@@ -63,7 +67,7 @@ function App() {
     let query = 'SELECT ';
     
     if (selectedFields.length > 0) {
-      query += selectedFields.join(', ');
+      query += selectedFields.map(f => `${f.tabla}.${f.campo}`).join(', ');
     } else {
       query += '*';
     }
@@ -75,7 +79,8 @@ function App() {
     }
 
     if (condition.field && condition.value) {
-      query += ` WHERE ${condition.field} ${condition.operator} ${condition.value}`;
+      const fieldStr = condition.tabla ? `${condition.tabla}.${condition.field}` : condition.field;
+      query += ` WHERE ${fieldStr} ${condition.operator} ${condition.value}`;
     }
 
     return query;
@@ -121,8 +126,10 @@ function App() {
           <div className="lg:col-span-8">
             <Constructor 
               selectedTables={selectedTables}
+              setSelectedTables={setSelectedTables}
               toggleTable={toggleTable}
               selectedFields={selectedFields}
+              setSelectedFields={setSelectedFields}
               toggleField={toggleField}
               condition={condition}
               setCondition={setCondition}
