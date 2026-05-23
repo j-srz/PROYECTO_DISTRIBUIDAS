@@ -120,10 +120,10 @@ A diferencia del caso anterior, el filtro no aborda la regla de fragmentación (
 
 ---
 
-### Sección 4 — Conclusión
+### Conclusión
 
-Con el desarrollo de este proyecto logramos crear una herramienta práctica que demuestra cómo funciona realmente la transparencia de repetición y fragmentación en bases de datos distribuidas.
+El desarrollo de este proyecto permitió al equipo consolidar y aplicar de manera práctica los conceptos fundamentales abordados durante el curso de Bases de Datos Distribuidas. La implementación del simulador exigió comprender a profundidad los principios de fragmentación horizontal y vertical, la transparencia de fragmentación como propiedad esencial de un sistema distribuido, y el rol que desempeña la tabla catálogo como mecanismo central de directorio que hace posible dicha transparencia.
 
-Además, el sistema comprueba la importancia de usar un catálogo centralizado. Logramos mantener una alta disponibilidad; al simular la caída de los nodos principales.
+A través de la construcción del sistema se pudo apreciar la importancia de la distribución de datos entre múltiples localidades y la forma en que esta distribución impacta directamente en la disponibilidad y el rendimiento de las consultas. La sintonía de red, entendida como la selección óptima del nodo más cercano que posea el fragmento requerido, demostró ser un mecanismo indispensable para minimizar el costo de transferencia de datos en una red distribuida, concepto que el curso abordó como uno de los criterios de diseño más relevantes en este tipo de arquitecturas.
 
-El diseño nos demostró que, aunque los servicios lógicos de las bases de datos se caigan, la estructura y los costos de la red se mantienen constantes. El resultado final es una arquitectura robusta, estable y perfecta como entorno de pruebas para aplicar los conceptos de la carrera.
+Finalmente, la transparencia de repetición y fragmentación, tema central de la asignatura y eje del presente proyecto, quedó evidenciada en el hecho de que el usuario interactúa en todo momento con tablas lógicas completas, sin conocer ni necesitar conocer la distribución física de los datos en la red. Este principio, que en sistemas reales es garantizado por capas de middleware y servidores de directorio, fue simulado aquí mediante la tabla catálogo implementada en data.js, demostrando que su correcta gestión es la piedra angular sobre la que descansa cualquier sistema de base de datos distribuida transparente.
