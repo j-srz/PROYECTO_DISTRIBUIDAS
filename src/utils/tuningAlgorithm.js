@@ -4,130 +4,116 @@ function cleanValue(val) {
   return val ? val.replace(/['"]/g, '').trim() : '';
 }
 
-export function simulateTuning({ currentLocation, activeNodes, selectedTables, selectedFields, condition }) {
-  if (selectedTables.length === 0) {
-    return { success: false, message: 'Seleccione al menos una tabla.', results: [] };
+// Precálculo inmutable de distancias al cargar el módulo
+const DISTANCIAS = precalcularDistancias(GRAFO);
+
+function precalcularDistancias(grafo) {
+  const localidades = Object.keys(grafo);
+  const distancias = {};
+
+  localidades.forEach(origen => {
+    distancias[origen] = bfs(grafo, origen);
+  });
+
+  return distancias;
+}
+
+function bfs(grafo, origen) {
+  const visitados = { [origen]: 0 };
+  const cola = [origen];
+
+  while (cola.length > 0) {
+    const actual = cola.shift();
+    grafo[actual].conexiones.forEach(vecino => {
+      if (visitados[vecino] === undefined) {
+        visitados[vecino] = visitados[actual] + 1;
+        cola.push(vecino);
+      }
+    });
   }
 
-  // Paso 1 — Determinar fragmentos necesarios
-  let requiredFragments = new Set();
+  return visitados;
+}
 
-  let fieldsToProcess = selectedFields;
-  // Si no hay campos seleccionados explícitamente (SELECT *), procesamos todos los de las tablas
-  if (fieldsToProcess.length === 0) {
-    fieldsToProcess = selectedTables.flatMap(t => 
+export function simulateTuning({ currentLocation, activeNodes, selectedTables, selectedFields, condition }) {
+  if (selectedTables.length === 0) {
+    return { posible: false, razon: 'Seleccione al menos una tabla.' };
+  }
+
+  // Paso 1 — Fragmentos requeridos
+  let fragmentosRequeridos = new Set();
+  
+  let camposAProcesar = selectedFields;
+  if (camposAProcesar.length === 0) {
+    camposAProcesar = selectedTables.flatMap(t => 
       TABLAS_LOGICAS[t].campos.map(c => ({ tabla: t, campo: c }))
     );
   }
 
-  for (const { tabla, campo } of fieldsToProcess) {
+  for (const { tabla, campo } of camposAProcesar) {
     if (tabla === 'Alumno') {
-      const fragments = CAMPO_A_FRAGMENTOS[campo];
-      if (fragments) {
-        for (const frag of fragments) {
-          requiredFragments.add(frag);
+      const fragmentosFisicos = CAMPO_A_FRAGMENTOS[campo];
+      if (fragmentosFisicos) {
+        for (const frag of fragmentosFisicos) {
+          fragmentosRequeridos.add(frag);
         }
       }
     } else {
-      // Para cualquier otra tabla, el fragmento ES la tabla misma
-      requiredFragments.add(tabla);
+      fragmentosRequeridos.add(tabla);
     }
   }
 
-  // Paso 2 — Aplicar sintonía por condición de fragmentación
-  if (condition && condition.field && condition.operator && condition.value) {
-    const valStr = cleanValue(condition.value).toLowerCase();
+  // Paso 2 — Sintonía por fragmentación
+  if (condition && condition.field === 'Titulo' && condition.value) {
+    const valorLimpio = cleanValue(condition.value).toLowerCase();
     
-    for (const frag of Array.from(requiredFragments)) {
-      if (FRAGMENTOS_ALUMNO[frag] && FRAGMENTOS_ALUMNO[frag].condicion) {
-        const condString = FRAGMENTOS_ALUMNO[frag].condicion;
-        // Asume formato "Campo = 'Valor'"
-        const parts = condString.split('=');
-        if (parts.length === 2) {
-          const fragField = parts[0].trim();
-          const fragVal = cleanValue(parts[1]).toLowerCase();
-          
-          if (condition.field === fragField) {
-            // Evaluamos la eliminación del fragmento si es lógicamente imposible que tenga los datos
-            if (condition.operator === '=' && valStr !== fragVal) {
-              requiredFragments.delete(frag);
-            } else if (condition.operator === '<>' && valStr === fragVal) {
-              requiredFragments.delete(frag);
-            }
-          }
+    if (valorLimpio === 'lic') {
+      fragmentosRequeridos.delete('Alumno2a');
+      fragmentosRequeridos.delete('Alumno2b');
+    } else if (valorLimpio === 'ing') {
+      fragmentosRequeridos.delete('Alumno1a');
+      fragmentosRequeridos.delete('Alumno1b');
+    }
+  }
+
+  const plan = [];
+
+  // Paso 3 & 4 — Verificación de disponibilidad y Localidad más cercana
+  for (const fragmento of Array.from(fragmentosRequeridos)) {
+    let localidadElegida = null;
+    let minimaDistancia = Infinity;
+
+    // Buscar en qué localidades habilitadas existe
+    for (const candidata of activeNodes) {
+      if (GRAFO[candidata].tablas.includes(fragmento)) {
+        const distancia = DISTANCIAS[currentLocation][candidata];
+        
+        if (distancia !== undefined && distancia < minimaDistancia) {
+          minimaDistancia = distancia;
+          localidadElegida = candidata;
         }
       }
     }
-  }
 
-  const results = [];
-  let allFound = true;
-
-  // Paso 3 & 4 — Verificar disponibilidad y calcular BFS
-  for (const fragment of Array.from(requiredFragments)) {
-    const closest = findClosestNode(fragment, currentLocation, activeNodes);
-    if (closest) {
-      results.push({
-        fragment,
-        node: closest.node,
-        distance: closest.distance
-      });
-    } else {
-      allFound = false;
-      results.push({
-        fragment,
-        node: 'Inaccesible',
-        distance: -1
-      });
+    if (!localidadElegida) {
+      return { 
+        posible: false, 
+        razon: `El fragmento '${fragmento}' no está disponible en ninguna localidad habilitada.` 
+      };
     }
+
+    plan.push({ 
+      localidad: localidadElegida, 
+      tabla: fragmento 
+    });
   }
 
-  // Ordenar resultados para mostrarlos agrupados/ordenados
-  results.sort((a, b) => a.node.localeCompare(b.node) || a.fragment.localeCompare(b.fragment));
+  // Ordenar el plan para mostrarlo de forma consistente
+  plan.sort((a, b) => a.localidad.localeCompare(b.localidad) || a.tabla.localeCompare(b.tabla));
 
+  // Paso 5 — Resultado (Éxito)
   return {
-    success: allFound,
-    message: allFound ? 'Consulta Ejecutable: Sí' : 'No es posible realizar la consulta',
-    results
+    posible: true,
+    plan
   };
-}
-
-function findClosestNode(fragment, startNode, activeNodes) {
-  const queue = [{ node: startNode, distance: 0 }];
-  const visited = new Set([startNode]);
-
-  let closestNodes = [];
-  let minDistance = -1;
-
-  while (queue.length > 0) {
-    const { node, distance } = queue.shift();
-
-    if (minDistance !== -1 && distance > minDistance) {
-      break;
-    }
-
-    if (activeNodes.includes(node) && GRAFO[node].tablas.includes(fragment)) {
-      if (minDistance === -1) {
-        minDistance = distance;
-      }
-      if (distance === minDistance) {
-        closestNodes.push({ node, distance });
-      }
-    }
-
-    const neighbors = GRAFO[node].conexiones || [];
-    for (const neighbor of neighbors) {
-      if (!visited.has(neighbor) && activeNodes.includes(neighbor)) {
-        visited.add(neighbor);
-        queue.push({ node: neighbor, distance: distance + 1 });
-      }
-    }
-  }
-
-  if (closestNodes.length > 0) {
-    // Si hay empate, seleccionamos cualquiera (el primero)
-    return closestNodes[0];
-  }
-
-  return null;
 }

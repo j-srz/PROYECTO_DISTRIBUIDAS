@@ -313,7 +313,7 @@ const MinimapaGrafo = ({ currentLocation, setCurrentLocation, activeNodes, setAc
               <div className="flex items-center gap-2 pointer-events-none">
                 <Settings2 size={18} className="text-primary" />
                 <span className="text-sm font-bold text-slate-800">
-                  Red Distribuida {expandido ? "(Modo Extendido)" : ""}
+                  Red {expandido ? "(Modo Extendido)" : ""}
                 </span>
               </div>
               
