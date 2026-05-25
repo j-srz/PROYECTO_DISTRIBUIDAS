@@ -3,6 +3,7 @@ import MonitorSQL from './components/MonitorSQL';
 import Constructor from './components/Constructor';
 import ResultadosPlan from './components/ResultadosPlan';
 import MinimapaGrafo from './components/MinimapaGrafo';
+import TablaCatalogoDinamica from './components/TablaCatalogoDinamica';
 import { simulateTuning } from './utils/tuningAlgorithm';
 import { ESTADO_INICIAL } from './data';
 
@@ -145,13 +146,14 @@ function App() {
 
       </div>
 
-      {/* Floating Widget */}
+      {/* Floating Widgets */}
       <MinimapaGrafo 
         currentLocation={currentLocation}
         setCurrentLocation={setCurrentLocation}
         activeNodes={activeNodes}
         setActiveNodes={setActiveNodes}
       />
+      <TablaCatalogoDinamica results={tuningResults} />
     </div>
   );
 }

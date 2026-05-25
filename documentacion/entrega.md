@@ -1,9 +1,9 @@
-# Proyecto: Transparencia de Repetición y Fragmentación
+# Actividad 4.2 Guía de uso (proyecto) 80%
 ## Base de Datos Distribuidas
 ### EQUIPO 1:
-#### Suárez Licea Jesús
-#### Garcia Castorena Jose Guadalupe
-#### Ewar 
+#### Suárez Licea Jesús | 24150047
+#### Garcia Castorena Jose Guadalupe | 24150042
+#### Gutierrez Gómez Edward Joseph | 22151217
 ### Instituto Tecnologico de Aguascalientes
 ### 22 de Mayo del 2026 Aguascalientes, Ags.
 

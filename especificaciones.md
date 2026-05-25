@@ -256,29 +256,22 @@ Cuando la condición del WHERE involucra el campo `Titulo`:
 
 Esta lógica reduce el conjunto de fragmentos requeridos cuando es posible deducirlo del criterio de fragmentación.
 
-#### RF-05c: Calcular las localidades óptimas (sintonía / localidad más cercana)
+#### RF-05c: Construir la Tabla Catálogo Dinámica y Calcular Localidades Óptimas
 
-Para cada fragmento requerido:
-
-1. Determinar todas las localidades habilitadas que contienen ese fragmento.
-2. Calcular la distancia desde la localidad actual del usuario hasta cada candidato usando el grafo de conexiones (BFS o Dijkstra, dado que todas las aristas tienen el mismo peso).
-3. Seleccionar la localidad con **menor distancia** al usuario.
-4. En caso de empate, cualquiera de las localidades empatadas es válida.
+El sistema construye una **Tabla Catálogo Dinámica** con todos los fragmentos disponibles en la red actual:
+1. Determina todas las localidades habilitadas y extrae todos los fragmentos que contienen.
+2. Calcula la distancia desde la localidad actual del usuario hasta cada candidato usando el grafo de conexiones (BFS).
+3. Ordena la tabla por fragmento y luego por menor distancia.
+4. Para determinar el plan final, el sistema itera esta tabla y selecciona la primera fila encontrada para cada fragmento **requerido** (lo que garantiza la menor distancia al usuario). En caso de empate, la primera opción es elegida.
 
 #### RF-05d: Presentar el resultado
 
 El sistema muestra:
 
 1. **Si la consulta es posible o no.**
-2. Si es posible: una tabla con las localidades y fragmentos a utilizar. Ejemplo de formato:
-
-| Localidad | Tabla     |
-|-----------|-----------|
-| L3        | Alumno2a  |
-| L5        | Alumno2b  |
-| L2        | Carrera   |
-
-3. **No se muestra el resultado de la consulta** (no se ejecuta un SELECT real sobre los datos).
+2. Si es posible: un plan de ejecución (`ResultadosPlan`) con las localidades y fragmentos óptimos elegidos.
+3. **El Catálogo Dinámico**: Un widget flotante que despliega *todos* los fragmentos habilitados ordenados por distancia, atenuando los que no son requeridos e iluminando la selección óptima del plan.
+4. **No se muestra el resultado de la consulta** (no se ejecuta un SELECT real sobre los datos).
 
 ---
 

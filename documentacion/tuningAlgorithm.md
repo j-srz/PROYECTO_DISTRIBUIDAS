@@ -86,24 +86,23 @@ Si condicion.campo == 'Titulo':
 - Entrada: `Set { 'Alumno1a', 'Alumno2a' }`, Condición: `Titulo = 'Lic'`
 - Salida Paso 2: `Set { 'Alumno1a' }`
 
-### Paso 3 — Verificación de Disponibilidad
-Por cada fragmento resultante, verifica si está disponible en *alguna* localidad habilitada. Si alguno de los fragmentos necesarios no existe en ninguna localidad habilitada, la consulta se marca como **Inviable** y el algoritmo se detiene de inmediato.
+### Paso 3 — Tabla Catálogo Dinámica
+Construye la **Tabla Catálogo Dinámica**, un listado ordenado de *todos* los fragmentos habilitados en los nodos encendidos de la topología. Se iteran los nodos activos, descubriendo sus tablas residentes, y se les calcula la distancia BFS hacia el origen. Finalmente se ordena por fragmento y distancia ascendente para facilitar su acceso.
 
-### Paso 4 — Localidad más Cercana por Fragmento
-Si la consulta es viable, busca para cada fragmento la localidad que lo contiene y que tenga la menor distancia respecto a la `localidadActiva` del usuario, consultando la matriz O(1). En caso de empate en distancia, la primera opción es elegida.
+### Paso 4 — Verificación de Disponibilidad
+Por cada fragmento requerido, verifica si existe en la Tabla Catálogo recién creada. Si alguno de los fragmentos necesarios no existe en la red, la consulta se marca como **Inviable** y el algoritmo se detiene, retornando la tabla catálogo para fines informativos junto al error.
 
-```javascript
-Por cada fragmento:
-  localidadElegida = candidata con menor DISTANCIAS[localidadActiva][candidata]
-```
+### Paso 5 — Plan Óptimo (Resultado Final)
+Si la consulta es viable, itera secuencialmente sobre la Tabla Catálogo Dinámica extrayendo la **primera fila** que corresponda a cada fragmento requerido. Debido al ordenamiento estable, la primera fila siempre garantiza la menor distancia de saltos posible (resolución de empate por orden natural). 
 
-### Paso 5 — Resultado Final
-Construye la respuesta formal esperada por el UI en el formato `{ posible, plan }` o `{ posible, razon }`.
+Construye la respuesta formal esperada por el UI en el formato `{ posible, tablaCatalogo, plan, fragmentosRequeridos }`.
 
 **Ejemplo Éxito:**
 ```json
 { 
   "posible": true, 
+  "tablaCatalogo": [ ... ],
+  "fragmentosRequeridos": ["Alumno1a", "Alumno2a"],
   "plan": [
     { "localidad": "L1", "tabla": "Alumno1a" },
     { "localidad": "L3", "tabla": "Alumno2a" }

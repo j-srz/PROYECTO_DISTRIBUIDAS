@@ -92,5 +92,5 @@ export const FISICA_ER = {
 };
 
 export const FEATURE_FLAGS = {
-  displayGraphicSelect: false
+  displayGraphicSelect: true
 };

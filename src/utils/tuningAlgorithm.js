@@ -35,6 +35,40 @@ function bfs(grafo, origen) {
   return visitados;
 }
 
+export function construirTablaCatalogoDinamica(localidadesHabilitadas, localidadActiva, grafo, distancias) {
+  const filas = [];
+  const fragmentosDisponibles = new Set();
+  
+  for (const loc of localidadesHabilitadas) {
+    if (grafo[loc] && grafo[loc].tablas) {
+      for (const t of grafo[loc].tablas) {
+        fragmentosDisponibles.add(t);
+      }
+    }
+  }
+
+  for (const fragmento of Array.from(fragmentosDisponibles)) {
+    const candidatas = localidadesHabilitadas.filter(loc =>
+      grafo[loc].tablas.includes(fragmento)
+    );
+
+    candidatas.forEach(localidad => {
+      filas.push({
+        fragmento,
+        localidad,
+        distancia: distancias[localidadActiva][localidad]
+      });
+    });
+  }
+
+  // Ordenar: por fragmento, luego por distancia ascendente
+  filas.sort((a, b) =>
+    a.fragmento.localeCompare(b.fragmento) || a.distancia - b.distancia
+  );
+
+  return filas;
+}
+
 export function simulateTuning({ currentLocation, activeNodes, selectedTables, selectedFields, condition }) {
   if (selectedTables.length === 0) {
     return { posible: false, razon: 'Seleccione al menos una tabla.' };
@@ -76,44 +110,43 @@ export function simulateTuning({ currentLocation, activeNodes, selectedTables, s
     }
   }
 
-  const plan = [];
+  // Paso 3 — Tabla Catálogo Dinámica
+  const tablaCatalogo = construirTablaCatalogoDinamica(activeNodes, currentLocation, GRAFO, DISTANCIAS);
 
-  // Paso 3 & 4 — Verificación de disponibilidad y Localidad más cercana
+  // Paso 4 — Verificación de disponibilidad
   for (const fragmento of Array.from(fragmentosRequeridos)) {
-    let localidadElegida = null;
-    let minimaDistancia = Infinity;
-
-    // Buscar en qué localidades habilitadas existe
-    for (const candidata of activeNodes) {
-      if (GRAFO[candidata].tablas.includes(fragmento)) {
-        const distancia = DISTANCIAS[currentLocation][candidata];
-        
-        if (distancia !== undefined && distancia < minimaDistancia) {
-          minimaDistancia = distancia;
-          localidadElegida = candidata;
-        }
-      }
-    }
-
-    if (!localidadElegida) {
+    if (!tablaCatalogo.some(f => f.fragmento === fragmento)) {
       return { 
         posible: false, 
-        razon: `El fragmento '${fragmento}' no está disponible en ninguna localidad habilitada.` 
+        tablaCatalogo,
+        razon: `El fragmento '${fragmento}' no está disponible en ninguna localidad habilitada.`,
+        fragmentosRequeridos: Array.from(fragmentosRequeridos)
       };
     }
+  }
 
-    plan.push({ 
-      localidad: localidadElegida, 
-      tabla: fragmento 
-    });
+  // Paso 5 — Elegir Óptimos
+  const plan = [];
+  const fragmentosProcesados = new Set();
+  
+  for (const fila of tablaCatalogo) {
+    if (fragmentosRequeridos.has(fila.fragmento) && !fragmentosProcesados.has(fila.fragmento)) {
+      plan.push({ 
+        localidad: fila.localidad, 
+        tabla: fila.fragmento 
+      });
+      fragmentosProcesados.add(fila.fragmento);
+    }
   }
 
   // Ordenar el plan para mostrarlo de forma consistente
   plan.sort((a, b) => a.localidad.localeCompare(b.localidad) || a.tabla.localeCompare(b.tabla));
 
-  // Paso 5 — Resultado (Éxito)
+  // Resultado (Éxito)
   return {
     posible: true,
-    plan
+    tablaCatalogo,
+    plan,
+    fragmentosRequeridos: Array.from(fragmentosRequeridos)
   };
 }

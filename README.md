@@ -20,6 +20,7 @@ src/
 │   ├── Constructor.jsx  — Constructor visual de la consulta (modos lista/gráfico, WHERE, ejecutar).
 │   ├── DiagramaER.jsx   — Modo gráfico interactivo con nodos arrastrables para la selección.
 │   ├── MinimapaGrafo.jsx— Widget flotante del grafo con sus estados compacto, minimizado y expandido.
+│   ├── TablaCatalogoDinamica.jsx — Widget flotante interactivo con la vista completa de disponibilidad de fragmentos.
 │   ├── MonitorSQL.jsx   — Muestra en tiempo real la consulta lógica SQL generada por el usuario.
 │   └── ResultadosPlan.jsx — Presenta el plan de ejecución físico con localidades y fragmentos elegidos.
 └── utils/
@@ -74,18 +75,14 @@ Teniendo el listado de fragmentos físicos, el algoritmo comprueba la cláusula 
 - Cualquier otra condición: conserva todos los fragmentos (no se puede descartar sin ejecutar la consulta).
 - Esto es una optimización fundamental: reduce el número de nodos a consultar cuando la condición coincide con el criterio de fragmentación horizontal.
 
-### 4.5 Paso 3 — Verificación de disponibilidad
-Explica cómo el algoritmo verifica que cada fragmento requerido esté disponible en al menos una localidad habilitada:
-- Itera `Object.keys(GRAFO)` filtrando solo las localidades en `localidadesHabilitadas`.
-- Para cada localidad habilitada, verifica si `GRAFO[localidad].tablas` incluye el fragmento.
-- Si algún fragmento no tiene ninguna localidad habilitada disponible → resultado: `{ posible: false, razon: "..." }`.
+### 4.5 Paso 3 — Creación de la Tabla Catálogo Dinámica
+Se construye explícitamente una vista que lista todos los fragmentos habilitados en las localidades activas (el universo de datos disponibles). Por cada fragmento, se calculan las distancias BFS hacia su localidad origen. La tabla se ordena por fragmento y distancia ascendente.
 
-### 4.6 Paso 4 — BFS para localidad más cercana
-Para cada fragmento disponible, se determina a qué nodo ir a buscarlo usando **Búsqueda en Anchura (BFS)**:
-- El grafo de localidades es **no dirigido** y todas las aristas tienen el mismo peso (distancia uniforme).
-- BFS desde `localidadActiva` calcula la distancia mínima en saltos hasta cada nodo del grafo.
-- Para cada fragmento requerido, entre todas las localidades habilitadas que lo contienen, se elige la de **menor distancia BFS**.
-- En caso de empate, cualquiera de las candidatas es válida.
+### 4.6 Paso 4 — Verificación de disponibilidad
+Se cruza la lista de fragmentos requeridos con la tabla catálogo dinámica. Si algún fragmento requerido no está en la tabla (no hay ninguna localidad habilitada que lo contenga), el algoritmo determina que la consulta no es posible y se detiene (retornando la tabla para fines informativos).
+
+### 4.7 Paso 5 — Construcción del Plan Óptimo
+Se itera ordenadamente sobre la tabla catálogo dinámica. Debido al ordenamiento estable por distancia, la primera fila que corresponda a un fragmento requerido garantiza ser la opción más cercana (con menor número de saltos). Se recolectan estas selecciones y se empaquetan en el `plan` definitivo de ejecución.
 
 Ejemplo visual con la topología actual:
 ```text
@@ -99,15 +96,16 @@ BFS desde L1:
 Resultado: L3 (distancia 2) es más cercana que L8 (distancia 3) → se elige L3
 ```
 
-### 4.7 Paso 5 — Construcción del resultado
-Al finalizar el recorrido y resolver todos los fragmentos, se formatea la respuesta:
+### 4.8 Construcción del resultado
+Al finalizar el recorrido y resolver todos los fragmentos, se formatea la respuesta en un objeto que incluye el plan y la tabla catálogo:
 ```javascript
 {
-  success: true,
-  message: "Consulta Ejecutable: Sí",
-  results: [
-    { fragment: "Alumno2a", node: "L3", distance: 2 },
-    { fragment: "Califica", node: "L1", distance: 0 }
+  posible: true,
+  tablaCatalogo: [ ... ], // Todos los fragmentos y sus distancias
+  fragmentosRequeridos: [ "Alumno2a", "Califica" ],
+  plan: [
+    { tabla: "Alumno2a", localidad: "L3" },
+    { tabla: "Califica", localidad: "L1" }
   ]
 }
 ```
@@ -162,6 +160,11 @@ O en caso de fallo crítico (ej. nodo caído):
 - **Interacciones:** Selección interactiva clickeando campos, o doble click para selecciones absolutas. Se infieren dinámicamente conexiones visuales uniendo campos homólogos (llaves foráneas conceptuales).
 - **Decisiones:** Sus coordenadas base vienen de `POSICIONES_INICIALES_ER` (y cualquier futura se asigna a un default `[20,20]`). La física permite acomodar la tabla libremente arrastrando su barra de título con inercia limitada.
 
+### `TablaCatalogoDinamica.jsx`
+- **Qué renderiza:** Widget flotante que ilustra todos los fragmentos y localidades habilitadas, ordenadas por distancia. 
+- **Estado:** Se despliega automáticamente tras cada ejecución y contiene los mismos estados visuales (`compact`, `expanded`, `minimized`) e interacciones físicas de inercia que el minimapa.
+- **Decisiones:** Recibe el catálogo dinámico e ilumina la fila seleccionada (la elegida en el Plan de Ejecución) atenuando los fragmentos presentes en la red pero no requeridos.
+
 ### `Constructor.jsx`
 - **Qué renderiza:** El core layout lateral para armar lógicamente los fragmentos y comandos. Intercambia las interfaces (lista o gráfico) dictaminado por su propio sub-estado (que a su vez está sujeto a `displayGraphicSelect`).
 - **Estado:** Funciona como un orquestador ciego para los props inyectados por `App.jsx` que gobiernan los campos seleccionados y las condiciones (WHERE).
@@ -188,6 +191,3 @@ Para extender el proyecto, solo precisas alterar **`src/data.js`**:
 - **BFS sobre Dijkstra**: Al poseer un grafo perimetral distribuido donde el costo de enlace por tramo (arista) no difiere o es uniforme (`peso constante = 1`), el Algoritmo BFS (*Breadth-First Search*) resuelve la solicitud al menor costo operacional posible, haciendo redundante el cálculo intensivo de distancias iterativas tipo Dijkstra.
 - **Límites de condición:** El `MonitorSQL` soporta en su lógica estructural únicamente una validación estricta por `WHERE` por corrida. No están implementadas bifurcaciones lógicas complejas (`AND` / `OR`).
 - **Cambios realizados durante la auditoría:** Como parte del aseguramiento de la *Fuente Única de Verdad*, se podaron dependencias de variables que resultaron carentes de utilidades funcionales tras iteraciones tempranas (ej. limpieza de booleanos inertes de visualización y purga de imports sin utilización en `App.jsx`).
-
----
-_Auditoría Arquitectónica Realizada - Listo para Entrega_

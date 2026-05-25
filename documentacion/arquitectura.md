@@ -18,6 +18,7 @@ Se enfoca 100% en el cliente y ha sido desarrollado con React, sin servidor de b
 │  │  ├─ Constructor.jsx        # Interfaz de creación de consultas
 │  │  ├─ DiagramaER.jsx         # Visor visual del esquema de datos
 │  │  ├─ MinimapaGrafo.jsx      # Control visual de la red de localidades
+│  │  ├─ TablaCatalogoDinamica.jsx # Visor flotante del catálogo de fragmentos disponibles
 │  │  ├─ MonitorSQL.jsx         # Renderizador del query en tiempo real
 │  │  └─ ResultadosPlan.jsx     # Presentación final del plan de ejecución
 │  ├─ utils/
@@ -53,8 +54,10 @@ La aplicación sigue una arquitectura unidireccional puramente manejada por el e
        ▼
 [Actualización de tuningResults en App.jsx]
        │
+       ├─────────► [TablaCatalogoDinamica.jsx] (Muestra todos los fragmentos y elegidos)
+       │
        ▼
-[ResultadosPlan.jsx] (Muestra Plan de Ejecución)
+[ResultadosPlan.jsx] (Muestra Plan de Ejecución Final)
 ```
 
 ## `data.js` como Fuente Única de Verdad
