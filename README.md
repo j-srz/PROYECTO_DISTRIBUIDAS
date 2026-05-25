@@ -188,5 +188,3 @@ Para extender el proyecto, solo precisas alterar **`src/data.js`**:
 - **BFS sobre Dijkstra**: Al poseer un grafo perimetral distribuido donde el costo de enlace por tramo (arista) no difiere o es uniforme (`peso constante = 1`), el Algoritmo BFS (*Breadth-First Search*) resuelve la solicitud al menor costo operacional posible, haciendo redundante el cálculo intensivo de distancias iterativas tipo Dijkstra.
 - **Límites de condición:** El `MonitorSQL` soporta en su lógica estructural únicamente una validación estricta por `WHERE` por corrida. No están implementadas bifurcaciones lógicas complejas (`AND` / `OR`).
 - **Cambios realizados durante la auditoría:** Como parte del aseguramiento de la *Fuente Única de Verdad*, se podaron dependencias de variables que resultaron carentes de utilidades funcionales tras iteraciones tempranas (ej. limpieza de booleanos inertes de visualización y purga de imports sin utilización en `App.jsx`).
-
----
