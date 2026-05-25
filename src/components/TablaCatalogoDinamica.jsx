@@ -7,9 +7,6 @@ const TablaCatalogoDinamica = ({ results }) => {
   const viewStateRef = useRef(viewState);
   useEffect(() => { viewStateRef.current = viewState; }, [viewState]);
 
-  // Si no hay resultados, o no es posible, o no hay tabla catálogo, no se muestra
-  if (!results || !results.posible || !results.tablaCatalogo || results.tablaCatalogo.length === 0) return null;
-
   const expandido = viewState === 'expanded';
   const minimized = viewState === 'minimized' || viewState === 'restoring';
   const compact = viewState === 'compact' || viewState === 'minimizing' || viewState === 'expanded';
@@ -43,6 +40,9 @@ const TablaCatalogoDinamica = ({ results }) => {
   let containerAnimClass = '';
   if (viewState === 'compact' && viewStateRef.current !== 'expanded') containerAnimClass = 'anim-compact-in-cat';
   if (viewState === 'minimizing') containerAnimClass = 'anim-compact-out-cat';
+
+  // Si no hay resultados, o no es posible, o no hay tabla catálogo, no se muestra
+  if (!results || !results.posible || !results.tablaCatalogo || results.tablaCatalogo.length === 0) return null;
 
   const renderFilas = () => {
     let currentFragment = null;
