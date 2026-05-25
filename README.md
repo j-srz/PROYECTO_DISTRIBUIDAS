@@ -190,4 +190,3 @@ Para extender el proyecto, solo precisas alterar **`src/data.js`**:
 - **Cambios realizados durante la auditoría:** Como parte del aseguramiento de la *Fuente Única de Verdad*, se podaron dependencias de variables que resultaron carentes de utilidades funcionales tras iteraciones tempranas (ej. limpieza de booleanos inertes de visualización y purga de imports sin utilización en `App.jsx`).
 
 ---
-_Auditoría Arquitectónica Realizada - Listo para Entrega_
