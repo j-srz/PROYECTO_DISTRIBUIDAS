@@ -26,7 +26,7 @@ El proyecto cuenta con un conjunto de componentes puros enfocados en mostrar el 
 ## `TablaCatalogoDinamica.jsx`
 - **Responsabilidad:** Muestra el catálogo de todos los fragmentos disponibles en la red habilitada y sus distancias hacia el origen, resaltando cuáles forman parte del plan óptimo final.
 - **Props:** Recibe los resultados (`tuningResults`) de la ejecución.
-- **Interacciones:** Misma máquina de estados físicos (`compact`, `minimized`, `expanded`) e inercia que el `MinimapaGrafo`.
+- **Interacciones:** Máquina de estados visuales (`compact`, `minimized`, `expanded`) para optimizar el espacio en pantalla. Se mantiene fija en la esquina inferior izquierda.
 - **Estados Especiales:**
   - Solo se renderiza tras una ejecución válida o fallida que contenga un catálogo disponible.
   - Atenúa visualmente los fragmentos disponibles pero no requeridos por el plan.

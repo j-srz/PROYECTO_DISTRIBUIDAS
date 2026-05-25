@@ -47,8 +47,8 @@ src/
 
 ---
 
-## El algoritmo de sintonía (`tuningAlgorithm`)
 
+<<<<<<< HEAD
 El corazón del sistema. Provee transparencia de distribución y fragmentación calculando de dónde sacar la información requerida, realizando una poda inteligente y encontrando los caminos más óptimos en la topología definida.
 
 ### 4.1 Contexto teórico
@@ -145,6 +145,8 @@ O en caso de fallo crítico (ej. nodo caído):
    - Resultado: `{ success: false, ... }` ("No es posible realizar la consulta").
 
 ---
+=======
+>>>>>>> dcc06eb89cbbbc5f5c84d63ceabced684e96a734
 
 ## Componentes principales
 
@@ -162,7 +164,7 @@ O en caso de fallo crítico (ej. nodo caído):
 
 ### `TablaCatalogoDinamica.jsx`
 - **Qué renderiza:** Widget flotante que ilustra todos los fragmentos y localidades habilitadas, ordenadas por distancia. 
-- **Estado:** Se despliega automáticamente tras cada ejecución y contiene los mismos estados visuales (`compact`, `expanded`, `minimized`) e interacciones físicas de inercia que el minimapa.
+- **Estado:** Se despliega automáticamente tras cada ejecución y contiene estados visuales (`compact`, `expanded`, `minimized`) fijados a la esquina inferior izquierda.
 - **Decisiones:** Recibe el catálogo dinámico e ilumina la fila seleccionada (la elegida en el Plan de Ejecución) atenuando los fragmentos presentes en la red pero no requeridos.
 
 ### `Constructor.jsx`
@@ -170,6 +172,7 @@ O en caso de fallo crítico (ej. nodo caído):
 - **Estado:** Funciona como un orquestador ciego para los props inyectados por `App.jsx` que gobiernan los campos seleccionados y las condiciones (WHERE).
 - **Interacciones:** Mapea el arreglo de opciones `OPERADORES` hacia el select, extrae campos de la selección actual, y notifica la ejecución (`onExecute`).
 
+<<<<<<< HEAD
 ---
 
 ## Guía de modificación del sistema
@@ -191,3 +194,5 @@ Para extender el proyecto, solo precisas alterar **`src/data.js`**:
 - **BFS sobre Dijkstra**: Al poseer un grafo perimetral distribuido donde el costo de enlace por tramo (arista) no difiere o es uniforme (`peso constante = 1`), el Algoritmo BFS (*Breadth-First Search*) resuelve la solicitud al menor costo operacional posible, haciendo redundante el cálculo intensivo de distancias iterativas tipo Dijkstra.
 - **Límites de condición:** El `MonitorSQL` soporta en su lógica estructural únicamente una validación estricta por `WHERE` por corrida. No están implementadas bifurcaciones lógicas complejas (`AND` / `OR`).
 - **Cambios realizados durante la auditoría:** Como parte del aseguramiento de la *Fuente Única de Verdad*, se podaron dependencias de variables que resultaron carentes de utilidades funcionales tras iteraciones tempranas (ej. limpieza de booleanos inertes de visualización y purga de imports sin utilización en `App.jsx`).
+=======
+>>>>>>> dcc06eb89cbbbc5f5c84d63ceabced684e96a734

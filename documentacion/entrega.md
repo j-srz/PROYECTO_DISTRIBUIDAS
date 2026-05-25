@@ -20,41 +20,11 @@ El proyecto fue desarrollado utilizando un entorno moderno de frontend basado en
 
 ### Implementación de la tabla catálogo
 
+La Tabla Catálogo Dinámica está implementada como un paso intermedio explícito en el algoritmo de sintonía, donde primero se escanean todas las localidades activas de la red para recopilar absolutamente todos los fragmentos disponibles, calculando y ordenando sus distancias (saltos) mediante Búsqueda en Anchura (BFS). A partir de este catálogo general ya ordenado, el algoritmo filtra cuáles fragmentos son realmente necesarios para la consulta y extrae simplemente la primera aparición de cada uno para construir el plan óptimo. 
 
-**— Implementación en `data.js`**
-La topología y el catálogo de ubicaciones se modelan a través del objeto `GRAFO` en el archivo de configuración global `data.js`. Para cada identificador de localidad, se registra un arreglo de conexiones (nodos adyacentes de red) y un arreglo de las tablas o fragmentos que alberga físicamente:
-
-```javascript
-export const GRAFO = {
-  L1: { conexiones: ["L2", "L5"], tablas: ["Alumno1a", "Materia", "Califica"] },
-  L2: { conexiones: ["L1", "L3"], tablas: ["Alumno1b", "Carrera"] },
-  L3: { conexiones: ["L2", "L6"], tablas: ["Alumno2a", "Maestro"] },
-  L4: { conexiones: ["L5", "L7"], tablas: ["Alumno2b", "Maestro"] },
-  L5: { conexiones: ["L1", "L4", "L6", "L9"], tablas: ["Alumno2b", "Materia"] },
-  L6: { conexiones: ["L3", "L5"], tablas: ["Alumno1a", "Califica"] },
-  L7: { conexiones: ["L4", "L8"], tablas: ["Materia", "Califica"] },
-  L8: { conexiones: ["L7", "L9"], tablas: ["Alumno2a", "Maestro"] },
-  L9: { conexiones: ["L5", "L8"], tablas: ["Alumno1b", "Carrera"] }
-};
-```
-
-**— Representación de la tabla catálogo**
-
-| Localidad | Conectada con | Tablas / Fragmentos almacenados |
-|-----------|--------------|--------------------------------|
-| L1 | L2, L5 | Alumno1a, Materia, Califica |
-| L2 | L1, L3 | Alumno1b, Carrera |
-| L3 | L2, L6 | Alumno2a, Maestro |
-| L4 | L5, L7 | Alumno2b, Maestro |
-| L5 | L1, L4, L6, L9 | Alumno2b, Materia |
-| L6 | L3, L5 | Alumno1a, Califica |
-| L7 | L4, L8 | Materia, Califica |
-| L8 | L7, L9 | Alumno2a, Maestro |
-| L9 | L5, L8 | Alumno1b, Carrera |
+Implementación en tuningAlgorithm.js La tabla catálogo dinámica se construye al momento de ejecutar una consulta mediante la función construirTablaCatalogoDinamica. Esta función revisa las localidades encendidas, recopila los fragmentos que contienen, calcula su distancia hacia el origen.
 
 
-**— Cómo el sistema consulta la tabla catálogo**
-Durante la ejecución lógica, el módulo resolutor (`tuningAlgorithm.js`) interactúa de forma secuencial con `data.js`. Primero lee el catálogo reverso `CAMPO_A_FRAGMENTOS` para transformar los campos lógicos seleccionados en requerimientos de fragmentos físicos. Posteriormente, si existe una condición explícita que corresponda al criterio de fragmentación (`Titulo`), se depuran los fragmentos que lógicamente no poseerán datos. Finalmente, se itera sobre los nodos habilitados del sistema buscando aquellos cuyo inventario coincida con los fragmentos requeridos, consultando una matriz de distancias precalculada desde el catálogo `GRAFO` para garantizar la elección de la localidad más cercana y óptima.
 
 ---
 
